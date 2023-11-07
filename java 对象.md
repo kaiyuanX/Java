@@ -22,14 +22,21 @@
   - [接口](#接口)
       - [认识接口](#认识接口)
       - [JDK8/9 的新特性](#jdk89-的新特性)
+- [内部类](#内部类)
+  - [种类](#种类)
+      - [成员内部类](#成员内部类)
+      - [静态内部类](#静态内部类)
+      - [局部内部类](#局部内部类)
+      - [匿名内部类](#匿名内部类)
+  - [Lambda表达式](#lambda表达式)
+      - [Lambda 表达式基本使用](#lambda-表达式基本使用)
+      - [省略规则](#省略规则)
 
 ---
 
 # 面向对象基础
 
-对象实质上是一种特殊的数据结构
-
-任何一个对象都可以包含一些数据，数据属于哪个对象，就由哪个对象来处理
+类的五大成分：成员变量、成员方法、构造、内部类、代码块
 
 在 java 中用 `class` 来设计对象
 
@@ -507,4 +514,199 @@ public interface A {
     private void test3(){
     }
 }
+```
+
+- [内部类](#内部类)
+  - [种类](#种类)
+      - [成员内部类](#成员内部类)
+      - [静态内部类](#静态内部类)
+      - [局部内部类](#局部内部类)
+      - [匿名内部类](#匿名内部类)
+  - [Lambda表达式](#lambda表达式)
+      - [Lambda 表达式基本使用](#lambda-表达式基本使用)
+      - [省略规则](#省略规则)
+
+
+---
+
+# 内部类
+
+如果一个类定义在另一个类的内部，这个类就是内部类
+
+```java
+public class A{
+    //内部类
+    public class B{
+    }
+}
+```
+
+内部类有四种形式，分别是成员内部类、静态内部类、局部内部类、匿名内部类
+
+## 种类
+
+#### 成员内部类
+
+成员内部类就是类中的一个普通成员
+
+```java
+public class Outer {
+    private int age = 99;
+
+    // 成员内部类
+    public class Inner{
+        private  int age = 88;
+
+        //在内部类中既可以访问自己类的成员，也可以访问外部类的成员
+        public void test(){
+            int age = 77;
+            System.out.println(age); //77
+            System.out.println(this.age); //88
+            System.out.println(Outer.this.age); //99
+        }
+    }
+}
+```
+
+```java
+// 外部类.内部类 变量名 = new 外部类().new 内部类();
+
+Outer.Inner in = new Outer().new Inner();
+
+in.test();
+```
+
+#### 静态内部类
+
+静态内部类属于外部类自己持有
+
+```java
+public class Outer {
+    int age = 99;
+    static String schoolName = "黑马";
+
+    // 静态内部类
+    public static class Inner{
+        public void test(){
+            System.out.println(schoolName);
+            // System.out.println(age);   //报错
+            // 原因在于 class Inner 是静态，它非常早就被创建了，那个时候还没有 age
+        }
+    }
+}
+```
+
+```java
+//格式：外部类.内部类 变量名 = new 外部类.内部类();
+
+Outer.Inner in = new Outer.Inner();
+```
+
+#### 局部内部类
+
+```java
+public class Outer{
+    public void test(){
+        // 局部内部类，定义在 test 方法中
+        class Inner{
+        }
+        
+        // 局部内部类只能在方法中创建对象，并使用
+        Inner in = new Inner();
+    }
+}
+```
+
+#### 匿名内部类
+
+下面就是匿名内部类的格式：
+
+```java
+new 父类/接口名(){
+    @Override
+    重写父类/接口的方法;
+}
+```
+
+匿名内部类本质上是一个没有名字的子类对象、或者接口的实现类对象
+
+匿名内部类在编写代码时没有名字，编译后系统会为自动为匿名内部类生产字节码，字节码的名称会以 `外部类$1.class` 的方法命名
+
+![1665658585267](assets/1665658585267.png)
+
+
+```java
+public interface Swimming{
+    public void swim();
+}
+```
+
+```java
+public class Test{
+    public static void main(String[] args){
+        Swimming s1 = new Swimming(){
+            public void swim(){
+                System.out.println("x");
+            }
+        };
+        
+        Swimming s2 = new Swimming(){
+            public void swim(){
+                System.out.println("xx");
+            }
+        };
+
+    }
+}
+```
+
+## Lambda表达式
+
+JDK8 新增的一种语法形式，叫做 Lambda 表达式
+
+作用：用于简化匿名内部类代码的书写
+
+IDEA 中 `alt + enter` 实现内部类到 Lambda 的转换
+
+#### Lambda 表达式基本使用
+
+```java
+() -> {}
+
+(形参列表) -> {
+    Override
+}
+```
+
+需要给说明一下的是，在使用 Lambda 表达式之前，必须先有一个接口，而且接口中只能有一个抽象方法 **（注意：不能是抽象类，只能是接口）**
+
+我们称之为函数式接口 FunctionalInterface，只有基于它的匿名内部类才能被 Lambda 表达式简化
+
+#### 省略规则
+
+```java
+1. Lambda 的标准格式
+
+	(参数类型 1 参数名 1, 参数类型 2 参数名 2) -> {
+		...方法体的代码...
+		return 返回值;
+	}
+
+
+2. ()中的参数类型可以直接省略
+
+	(参数名 1, 参数名 2)->{
+		...方法体的代码...
+		return 返回值;
+	}
+	
+
+3. 如果 {} 总的语句只有一条语句，则{}可以省略、return 关键字、以及最后的 “;” 都可以省略
+
+	(参数名 1, 参数名 2)-> 返回值
+
+
+4. 如果 () 里面只有一个参数，则 () 可以省略
+
+	参数名-> {}
 ```
