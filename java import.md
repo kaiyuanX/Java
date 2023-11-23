@@ -34,6 +34,25 @@
       - [ZoneId, ZonedDateTime](#zoneid-zoneddatetime)
       - [DateTimeFormatter](#datetimeformatter)
       - [Period, Duration, ChronoUnit](#period-duration-chronounit)
+- [容器](#容器)
+  - [Collection](#collection)
+      - [常用方法](#常用方法)
+      - [遍历](#遍历)
+  - [List](#list)
+      - [List 集合的常用方法](#list-集合的常用方法)
+      - [List 集合的遍历方式](#list-集合的遍历方式)
+      - [LinkedList](#linkedlist)
+  - [Set](#set)
+  - [HashSet](#hashset)
+      - [HashSet 集合底层原理](#hashset-集合底层原理)
+      - [HashSet 去重原理](#hashset-去重原理)
+      - [LinkedHashSet](#linkedhashset)
+  - [TreeSet](#treeset)
+  - [Collections](#collections)
+  - [Map](#map)
+      - [概述](#概述)
+      - [常用方法](#常用方法-1)
+      - [遍历](#遍历-1)
 
 # 随机数
 
@@ -853,4 +872,458 @@ duration.toMinutes();   // 间隔多少分
 duration.toSeconds();   // 间隔多少秒
 duration.toMillis();    // 间隔多少毫秒
 duration.toNanos();     // 间隔多少纳秒
+```
+
+# 容器
+
+Collection: 一对一
+
+Map: 一对二
+
+## Collection
+
+![1666165150752](assets/1666165150752.png)
+
+#### 常用方法
+
+```java
+Collection<String> c = new ArrayList<>();
+
+// public boolean add(E e): 添加元素到集合
+c.add("java1");
+
+// pubilc boolean remove(E e): 删除某个元素，如果有多个重复元素只能删除第一个
+c.remove("java1");
+
+// public int size(): 获取集合的大小
+c.size();
+
+// public boolean contains(Object obj): 判断集合中是否包含某个元素
+c.contains("java1"); //true
+
+// public void clear(): 清空集合的元素
+c.clear(); 
+
+// public boolean isEmpty(): 判断集合为空返回 true 反之返回 false
+
+// public Object[] toArray(): 把集合转换为数组
+Object[] array = c.toArray();
+
+// 如果想把集合转换为指定类型的数组，可以使用下面的代码
+String[] array1 = c.toArray(new String[c.size()]);
+System.out.println(Arrays.toString(array1)); //[java1,java2, java2, java3]
+
+// 还可以把一个集合中的元素，添加到另一个集合中
+c1.addAll(c2); // 把 c2 集合中的全部元素，添加到 c1 集合中去
+```
+
+#### 遍历
+
+1. 迭代器
+
+```java
+// 原型
+
+Iterator<E> iterator();
+
+boolean hasNext();
+E next();
+```
+
+```java
+Collection<String> c = new ArrayList<>();
+
+// 1. 先获取迭代器对象
+Iterator<String> it = c.iterator();
+
+// 2. 
+while(it.hasNext()){
+    String s = it.next();
+}
+```
+
+2. 简化的写法，叫做增强 for 循环
+
+```java
+
+for(String s: c){
+    System.out.println(s); 
+}
+```
+
+3. forEach
+
+```java
+// forEach 方法的参数是一个 Consumer 函数式接口
+
+default void forEach(Consumer<? super T> action)
+```
+
+```java
+Collection<String> c = new ArrayList<>();
+
+// 
+c.forEach(new Consumer<String>{
+    @Override
+    public void accept(String s){
+        System.out.println(s);
+    }
+});
+
+// 也可以使用 lambda 表达式
+c.forEach(s->System.out.println(s));
+```
+
+## List
+
+#### List 集合的常用方法
+
+List集合是索引的，所以多了一些有索引操作的方法
+
+```java
+void add(int index, E element);
+E remove(int index);
+E get(int index);
+E set(int index, E element); // 修改 index 位置
+```
+
+#### List 集合的遍历方式
+
+- for 循环（因为 List 有索引）
+- `listIterator`
+
+```java
+Iterator<String> it = list.listIterator();
+while(it.hasNext())
+{
+    if(it.next()...)
+    {
+        // 在用 Iterator 遍历 List 的时候，使用 Iterator 的方法删除元素
+        // 避免 ConcurrentModificationException
+        it.remove();
+        // list.remove(); xxxx
+    }
+}
+```
+
+#### LinkedList
+
+LinkedList 集合是基于双向链表实现了，所以相对于 ArrayList 新增了一些可以针对头尾进行操作的方法，如下图示所示：
+
+```java
+public void addFirst(E e);
+public void addLast(E e);
+public E getFirst();
+public E getLast();
+public E removeFirst();
+public E removeLast();
+```
+
+可以用它来设计 `stack` `queue`
+
+- 入队列可以调用 `addLast`，出队列调用 `removeFirst()`
+- 压栈 `push` 等价于 `addFirst()`，弹栈 `pop` 等价于 `removeFirst()`
+
+
+## Set
+
+```java
+Set<Integer> set = new HashSet<>();	        // 无序、无索引、不重复
+Set<Integer> set = new LinkedHashSet<>();   // 有序、无索引、不重复
+Set<Integer> set = new TreeSet<>();         // 有序、无索引、不重复
+```
+
+## HashSet
+
+#### HashSet 集合底层原理
+
+HashSet 集合底层是基于哈希表实现
+
+- JDK8以后：哈希表 = 数组 + 链表 + 红黑树
+
+![1666170451762](assets/1666170451762.png)
+
+我们发现往 HashSet 中存储元素时，底层调用了元素的两个方法：
+
+- `hashCode()` 方法获取元素的 hashCode
+- `equals()` 方法，用来比较新添加的元素和集合中已有的元素是否相同 
+
+  - 两个函数返回都相同才认为元素重复
+  - hashCode 相同，equals 不同，则以链表的形式连接在数组的同一个索引为位置（如上图所示）
+
+在 JDK8 开始后，为了提高性能，当链表的长度超过 8 时，数组长度超过 64，就会把链表转换为红黑树，如下图所示：
+
+![1666171011761](assets/1666171011761-1667311900100.png)
+
+
+
+#### HashSet 去重原理
+
+要想保证在 HashSet 集合中没有重复元素，我们需要重写 E 的 hashCode 和 equals 方法
+
+```java
+public class Student{
+    // 成员变量
+    // 构造方法
+    //...get、set、toString()...
+    
+    // 按快捷键生成 hashCode() 和 equals()
+    // alt+insert 选择 hashCode and equals
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Student student = (Student) o;
+
+        if (age != student.age) return false;
+        if (Double.compare(student.height, height) != 0) return false;
+        return name != null ? name.equals(student.name) : student.name == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = name != null ? name.hashCode() : 0;
+        result = 31 * result + age;
+        temp = Double.doubleToLongBits(height);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
+}
+```
+
+#### LinkedHashSet
+
+LinkedHashSet 额外新增了一个双向链表来维护元素的存取顺序
+
+存取是有序的
+
+![1666171776819](assets/1666171776819-1667311894748.png)
+
+每次添加元素，就和上一个元素用双向链表连接一下
+
+第一个添加的元素是双向链表的头节点，最后一个添加的元素是双向链表的尾节点
+
+
+
+
+## TreeSet
+
+底层是一个红黑树
+
+TreeSet 特点是可以对元素进行排序，但是必须指定元素的排序规则
+
+```java
+// Integer
+
+Set<Integer> set1= new TreeSet<>();
+set1.add(8);
+set1.add(6);
+set1.add(4);
+set1.add(3);
+set1.add(7);
+set1.add(1);
+set1.add(5);
+set1.add(2);
+System.out.println(set1); //[1,2,3,4,5,6,7,8]
+```
+
+```java
+// 自定义类型的元素，需要指定排序规则
+
+// Student
+Set<Student> students = new TreeSet<>();
+
+Student s1 = new Student("至尊宝",20, 169.6);
+Student s2 = new Student("紫霞",23, 169.8);
+Student s3 = new Student("蜘蛛精",23, 169.6);
+Student s4 = new Student("牛魔王",48, 169.6);
+
+students.add(s1);
+students.add(s2);
+students.add(s3);
+students.add(s4);
+System.out.println(students); // 报错，没有指定排序规则
+```
+
+指定排序规则
+
+1. 让 E 的所属 class `implements Comparable` 接口，重写 `compareTo` 方法
+2. 在创建 TreeSet 集合时传递 Compartor 对象指定排序规则
+
+例子
+
+```java
+// 1. 
+// 在往 TreeSet 集合中添加元素时，add 方法底层会调用 compareTo 方法
+// 结果是正数、负数、零，决定元素放在后面、前面还是不存
+
+// 让 Student 类，实现 Comparable 接口
+public class Student implements Comparable<Student>{
+    // 成员变量
+    // 构造方法
+    //...get、set、toString()...
+    
+    // 重写 compareTo 方法
+    @Override
+    public int compareTo(Student o) {
+        //this：是将要添加进去的 Student 对象
+        //o: 比较的对象
+        return this.age-o.age;
+    }
+}
+```
+
+```java
+// 2. 
+// 创建 TreeSet 集合时，传递 Compartor 对象指定排序规则
+// 优先级大于方法 1.
+
+Set<Student> students = new TreeSet<>(new Comparator<Student>{
+    @Override
+    public int compare(Student o1, Student o2){
+        // ... 你的规则
+        return result; 
+    }
+});
+```
+
+## Collections
+
+```java
+List<String> names = new ArrayList<>();
+
+// 1. public static <T> boolean addAll(Collection<? super T> c, T... e)
+Collections.addAll(names, "1", "2", "3", "4");
+
+// 2. public static void shuffle(List<?> list)：对集合打乱顺序
+Collections.shuffle(names);
+
+// 3. public static <T> void short(List<T list): 对 List 集合排序
+List<Integer> list = new ArrayList<>();
+list.add(3);
+list.add(5);
+list.add(2);
+Collections.sort(list);
+
+// 4. public static <T> int banarySearch(List<T> list, T key);
+
+// 5. public static <T> void max/min(Collection<T> coll);
+
+// 6. public static <T> void swap(List<?> list, int i, int j);
+```
+
+涉及到比较，需要指定比较规则
+
+- 让元素实现 Comparable 接口，重写 compareTo 方法
+
+    ```java
+    public class Student implements Comparable<Student>{
+        @Override
+        public int compareTo(Student o){
+            ...
+            return result;
+        }
+    }
+    ```
+
+- 使用调用 sort 方法时，传递比较器
+
+    ```java
+    Collections.sort(students, new Comparator<Student>(){
+        @Override
+        public int compare(Student o1, Student o2){
+            return o1.getAge()-o2.getAge();
+        }
+    });	
+    ```
+
+## Map
+
+3 个实现类
+
+- `TreeMap`
+- `HashMap`
+- `LinkedHashMap`
+
+#### 概述
+
+Map 集合中的每一个元素是以 `key=value` 的形式存在的
+
+在 Java 中有一个类叫 Entry，Entry 的对象用来表示 “键值对”
+
+键不能重复，值可以重复，每一个键只能找到自己对应的值
+
+![1667308506610](assets/1667308506610.png)
+
+#### 常用方法
+
+```java
+public V put(K key, V value);  // 添加元素
+public V get(Object key);      // key 获取 value
+public V remove(Object key);   // key 删除 
+public int size();
+pubilc void clear();
+pubilc boolean isEmpty();
+pubilc boolean containsKey(Object key);
+pubilc boolean containsValue(Object value);
+```
+
+#### 遍历
+
+==一==
+
+1. `public Set<K> keySet();` 获取所有 key 的集合
+2. `public V get(Object key);` 遍历 key 找 value
+
+```java
+Map<String, Double> map = new HashMap<>();
+
+// 1、all key
+Set<String> keys = map.keySet();
+
+// 2、遍历 keys
+for (String key : keys) {
+    map.get(key);
+}
+```
+
+==二==
+
+1. `Set<Map.Entry<K, V>> entrySet();` 获取所有 Entry
+2. `getKey(); getValue();`
+
+```java
+Map<String, Double> map = new HashMap<>();
+
+// 1. 
+Set<Map.Entry<String, Double>> entries = map.entrySet();
+
+for (Map.Entry<String, Double> entry : entries) {
+    entry.getKey();
+    entry.getValue();
+}
+```
+
+==三==
+
+`dafault void forEach(BiConsumer<? super K, ? super V> action)`
+
+```java
+Map<String, Double> map = new HashMap<>();
+
+// 遍历 map 集合，传递匿名内部类
+map.forEach(new BiConsumer<String, Double>() {
+    @Override
+    public void accept(String k, Double v) {
+        System.out.println(k + "---->" + v);
+    }
+});
+
+// 遍历 map 集合，传递 Lambda 表达式
+map.forEach(( k,  v) -> {
+    System.out.println(k + "---->" + v);
+});
 ```
